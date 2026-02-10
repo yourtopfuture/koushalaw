@@ -41,16 +41,16 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
     
-    <!-- React & Babel -->
+    <!-- React & Babel (Updated Versions) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- Upgraded to @babel/standalone for better React 18 support -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
       body {
         font-family: 'Inter', sans-serif;
         background-color: #FAFAFA;
-        /* Subtle elegant texture */
         background-image: radial-gradient(#d4a75b 0.5px, transparent 0.5px), radial-gradient(#d4a75b 0.5px, #FAFAFA 0.5px);
         background-size: 20px 20px;
         background-position: 0 0, 10px 10px;
@@ -61,14 +61,12 @@
       h1, h2, h3, .serif-font {
         font-family: 'Playfair Display', serif;
       }
-      /* Custom checkbox styling */
       .custom-checkbox {
         accent-color: #c68e3d; 
         width: 1.25rem;
         height: 1.25rem;
         cursor: pointer;
       }
-      /* Hide scrollbar for cleaner iframe look */
       ::-webkit-scrollbar {
         width: 8px;
       }
@@ -83,8 +81,22 @@
 </head>
 <body>
     <div id="root"></div>
+    
+    <!-- Error Fallback Display -->
+    <div id="error-message" style="display:none; padding: 20px; color: red; text-align: center; font-family: sans-serif;">
+        <h2>Something went wrong loading the calculator.</h2>
+        <p>Please check the console for details.</p>
+        <p id="error-text"></p>
+    </div>
 
-    <script type="text/babel">
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        document.getElementById('error-message').style.display = 'block';
+        document.getElementById('error-text').innerText = message;
+      };
+    </script>
+
+    <script type="text/babel" data-presets="env,react">
         const { useState, useEffect, useRef } = React;
 
         // --- ICONS ---
