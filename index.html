@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Buyer's Closing Costs Calculator</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              gold: {
+                50: '#fbf8f1',
+                100: '#f5edd9',
+                200: '#ead9b0',
+                300: '#dfc082',
+                400: '#d4a75b',
+                500: '#c68e3d', // Primary Gold matching logo
+                600: '#aa7030',
+                700: '#885429',
+                800: '#714427',
+                900: '#5e3a24',
+              },
+              slate: {
+                850: '#151f32', 
+                900: '#000000', // Deep black for header matching
+              }
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #FAFAFA;
+        /* Subtle elegant texture */
+        background-image: radial-gradient(#d4a75b 0.5px, transparent 0.5px), radial-gradient(#d4a75b 0.5px, #FAFAFA 0.5px);
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+        background-color: #fdfdfd;
+        margin: 0;
+        padding: 0;
+      }
+      h1, h2, h3, .serif-font {
+        font-family: 'Playfair Display', serif;
+      }
+      /* Custom checkbox styling */
+      .custom-checkbox {
+        accent-color: #c68e3d; 
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+      }
+      /* Hide scrollbar for cleaner iframe look */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #c68e3d; 
+        border-radius: 4px;
+      }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- ICONS ---
+        const CalculatorIcon = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+        );
+        const MapPin = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        );
+        const CheckCircle2 = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        );
+        const ArrowRight = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        );
+        const Building2 = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+        );
+        const Home = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        );
+        const HelpCircle = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        );
+        const Building = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M16 18h.01"/></svg>
+        );
+        const Check = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 6 9 17l-5-5"/></svg>
+        );
+        const Wallet = (props) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+        );
+
+        // --- CONSTANTS & TYPES ---
+        const PropertyType = {
+          CONDO_APT: 'Condo Apt.',
+          TOWNHOUSE: 'Townhouse',
+          DETACHED_HOUSE: 'Detached House',
+          NOT_DECIDED: 'Not Decided'
+        };
+
+        const INITIAL_STATE = {
+          purchasePrice: 0,
+          downPaymentPercent: 20,
+          downPaymentAmount: 0,
+          province: 'Ontario', 
+          city: 'Toronto',
+          propertyType: null,
+          isFirstTimeBuyer: false,
+          isResident: false 
+        };
+
+        const PROPERTY_TYPE_CONFIG = [
+          { id: PropertyType.CONDO_APT, label: 'Condo Apt.', icon: Building },
+          { id: PropertyType.TOWNHOUSE, label: 'Townhouse', icon: Building2 },
+          { id: PropertyType.DETACHED_HOUSE, label: 'Detached House', icon: Home },
+          { id: PropertyType.NOT_DECIDED, label: 'Not Decided', icon: HelpCircle },
+        ];
+
+        // --- CALCULATIONS ---
+        const calculateOntarioLTT = (price) => {
+          let tax = 0;
+          if (price > 0) tax += Math.min(price, 55000) * 0.005;
+          if (price > 55000) tax += (Math.min(price, 250000) - 55000) * 0.01;
+          if (price > 250000) tax += (Math.min(price, 400000) - 250000) * 0.015;
+          if (price > 400000) tax += (Math.min(price, 2000000) - 400000) * 0.02;
+          if (price > 2000000) tax += (price - 2000000) * 0.025;
+          return tax;
+        };
+
+        const calculateBCLTT = (price) => {
+          let tax = 0;
+          if (price > 0) tax += Math.min(price, 200000) * 0.01;
+          if (price > 200000) tax += (Math.min(price, 2000000) - 200000) * 0.02;
+          if (price > 2000000) tax += (price - 2000000) * 0.03;
+          return tax;
+        };
+
+        const calculateGenericLTT = (price) => {
+          return price * 0.015;
+        };
+
+        const calculateTitleInsurance = (price) => {
+          const baseRate = 300;
+          const threshold = 500000;
+          if (price <= threshold) {
+            return baseRate;
+          }
+          const excess = price - threshold;
+          const additionalFee = (excess / 1000) * 0.90;
+          return baseRate + additionalFee;
+        };
+
+        const getCMHCRate = (downPaymentPercent) => {
+          if (downPaymentPercent >= 20) return 0;
+          if (downPaymentPercent >= 15) return 0.0280;
+          if (downPaymentPercent >= 10) return 0.0310;
+          if (downPaymentPercent >= 5) return 0.0400;
+          return 0.0400;
+        };
+
+        const getPSTRate = (province) => {
+          switch (province) {
+            case 'Ontario': return 0.08;
+            case 'Quebec': return 0.09;
+            case 'Saskatchewan': return 0.06;
+            default: return 0;
+          }
+        };
+
+        const calculateClosingCosts = (state) => {
+          const { purchasePrice, downPaymentAmount, downPaymentPercent, province, city, isFirstTimeBuyer, propertyType, isResident } = state;
+
+          let lttProvincial = 0;
+          let lttMunicipal = 0;
+          let rebateProvincial = 0;
+          let rebateMunicipal = 0;
+
+          if (province === 'Ontario') {
+            lttProvincial = calculateOntarioLTT(purchasePrice);
+            if (isFirstTimeBuyer) {
+              rebateProvincial = Math.min(lttProvincial, 4000);
+            }
+            if (city === 'Toronto') {
+              lttMunicipal = calculateOntarioLTT(purchasePrice);
+              if (isFirstTimeBuyer) {
+                rebateMunicipal = Math.min(lttMunicipal, 4475);
+              }
+            }
+          } else if (province === 'British Columbia') {
+            lttProvincial = calculateBCLTT(purchasePrice);
+            if (isFirstTimeBuyer && purchasePrice <= 500000) {
+               if (purchasePrice <= 500000) rebateProvincial = lttProvincial;
+               else if (purchasePrice <= 525000) rebateProvincial = lttProvincial * ((525000 - purchasePrice) / 25000);
+            }
+          } else {
+            lttProvincial = calculateGenericLTT(purchasePrice);
+          }
+
+          let nonResidentSpeculationTax = 0;
+          if (!isResident) {
+            if (province === 'Ontario') {
+              nonResidentSpeculationTax = purchasePrice * 0.25;
+            } else if (province === 'British Columbia') {
+              nonResidentSpeculationTax = purchasePrice * 0.20;
+            }
+          }
+
+          const insuranceRate = getCMHCRate(downPaymentPercent);
+          const mortgageAmount = purchasePrice - downPaymentAmount;
+          const mortgageInsurancePremium = downPaymentPercent < 20 ? mortgageAmount * insuranceRate : 0;
+          const pstRate = getPSTRate(province);
+          const pstOnMortgageInsurance = mortgageInsurancePremium * pstRate;
+
+          const legalFees = 1500;
+          const titleInsurance = calculateTitleInsurance(purchasePrice);
+          const registrationFees = province === 'Ontario' ? 150 : 100;
+          const appraisalFee = 350;
+          const homeInspectionFee = 500;
+          const estoppelCertificateFee = propertyType === PropertyType.CONDO_APT ? 100 : 0;
+
+          const totalClosingCosts = 
+            (lttProvincial - rebateProvincial) +
+            (lttMunicipal - rebateMunicipal) +
+            nonResidentSpeculationTax +
+            legalFees +
+            titleInsurance +
+            registrationFees +
+            appraisalFee +
+            homeInspectionFee +
+            estoppelCertificateFee +
+            pstOnMortgageInsurance;
+
+          return {
+            landTransferTaxProvincial: lttProvincial,
+            landTransferTaxMunicipal: lttMunicipal,
+            rebateProvincial,
+            rebateMunicipal,
+            nonResidentSpeculationTax,
+            legalFees,
+            titleInsurance,
+            registrationFees,
+            appraisalFee,
+            homeInspectionFee,
+            estoppelCertificateFee,
+            mortgageInsurancePremium,
+            pstOnMortgageInsurance,
+            totalClosingCosts,
+            totalCashRequired: downPaymentAmount + totalClosingCosts
+          };
+        };
+
+        // --- COMPONENTS ---
+
+        const KoushaHeader = () => (
+          <div className="text-center mb-10">
+            <h2 className="font-serif text-4xl text-gold-500 font-bold tracking-wide mb-1">Kousha Law</h2>
+            <div className="flex items-center justify-center gap-3">
+               <div className="h-px bg-gold-300 w-12"></div>
+               <p className="text-xs uppercase tracking-[0.2em] text-slate-500 font-sans">Attorney at Law</p>
+               <div className="h-px bg-gold-300 w-12"></div>
+            </div>
+          </div>
+        );
+
+        const Label = ({ children, hasHelp, htmlFor, className = '' }) => {
+          return (
+            <label htmlFor={htmlFor} className={`flex items-center gap-1.5 text-slate-800 font-semibold mb-2 ${className}`}>
+              {children}
+              {hasHelp && (
+                <HelpCircle className="w-4 h-4 text-gold-500 hover:text-gold-600 cursor-pointer" />
+              )}
+            </label>
+          );
+        };
+
+        const Input = ({ prefix, suffix, containerClassName = '', className = '', ...props }) => {
+          return (
+            <div className={`
+              group flex items-center bg-white border border-gray-300 rounded-none overflow-hidden transition-all duration-300
+              shadow-sm hover:border-gold-500
+              focus-within:ring-1 focus-within:ring-gold-500 focus-within:border-gold-500
+              ${containerClassName}
+            `}>
+              {prefix && (
+                <span className="pl-4 pr-2 text-slate-500 font-serif font-semibold select-none group-focus-within:text-gold-600 transition-colors">
+                  {prefix}
+                </span>
+              )}
+              <input
+                className={`w-full py-3 px-3 outline-none text-slate-900 font-semibold placeholder-gray-400 bg-transparent text-lg font-sans ${className}`}
+                {...props}
+              />
+              {suffix && (
+                <span className="pr-4 pl-2 text-slate-400 font-medium select-none bg-white group-focus-within:text-slate-600">
+                  {suffix}
+                </span>
+              )}
+            </div>
+          );
+        };
+
+        const PropertyCard = ({ label, icon: Icon, selected, onClick }) => {
+          return (
+            <button
+              onClick={onClick}
+              type="button"
+              className={`
+                relative overflow-hidden group flex flex-col items-center justify-center p-5 border transition-all duration-300 w-full aspect-[4/3] sm:aspect-square
+                ${selected 
+                  ? 'bg-slate-900 border-gold-500 shadow-xl translate-y-[-2px]' 
+                  : 'bg-white border-gray-200 hover:border-gold-300 hover:shadow-lg'
+                }
+              `}
+            >
+              {selected && (
+                <div className="absolute top-0 right-0 p-0">
+                   <div className="w-0 h-0 border-t-[20px] border-r-[20px] border-t-gold-500 border-r-transparent transform rotate-90"></div>
+                </div>
+              )}
+              
+              <div className={`
+                p-3 rounded-full mb-3 transition-colors duration-300
+                ${selected ? 'bg-gold-500 text-white' : 'bg-slate-50 text-slate-500 group-hover:bg-gold-50 group-hover:text-gold-600'}
+              `}>
+                <Icon className="w-6 h-6" strokeWidth={1.5} />
+              </div>
+              
+              <span className={`text-sm font-semibold text-center leading-tight transition-colors ${selected ? 'text-gold-100' : 'text-slate-600 group-hover:text-slate-900'}`}>
+                {label}
+              </span>
+            </button>
+          );
+        };
+
+        const formatCurrency = (val) => {
+          return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(val);
+        };
+
+        const Row = ({ label, value, isNegative, isTotal, subtext }) => {
+          if (value === 0 && !isTotal) return null;
+          
+          return (
+            <div className={`flex justify-between items-center py-4 ${isTotal ? 'border-t border-slate-900 mt-4 pt-6' : 'border-b border-gray-200 last:border-0'}`}>
+              <div>
+                <span className={`block ${isTotal ? 'text-xl font-bold text-slate-900 serif-font' : 'text-slate-700 font-medium'}`}>{label}</span>
+                {subtext && <p className="text-xs text-gold-600 font-medium mt-0.5 uppercase tracking-wide">{subtext}</p>}
+              </div>
+              <span className={`font-mono font-medium text-lg ${isNegative ? 'text-green-700' : isTotal ? 'text-gold-600 text-2xl font-bold' : 'text-slate-900'}`}>
+                {isNegative ? '-' : ''}{formatCurrency(value)}
+              </span>
+            </div>
+          );
+        };
+
+        const ClosingCostsSummary = ({ result, city, province }) => {
+          return (
+            <div className="mt-16 animate-in fade-in slide-in-from-bottom-8 duration-700">
+              
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                {/* Result Card */}
+                <div className="lg:col-span-5 order-first lg:order-last">
+                  <div className="bg-slate-900 text-white p-8 shadow-2xl relative overflow-hidden h-full flex flex-col justify-between border-t-4 border-gold-500">
+                    <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-gold-500/10 blur-3xl"></div>
+                    
+                    <div className="relative z-10">
+                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-gold-500/10 border border-gold-500/30 text-xs font-semibold uppercase tracking-wider text-gold-400 mb-6">
+                        <Wallet className="w-3 h-3" />
+                        Final Calculation
+                      </div>
+                      <h3 className="text-gold-100 font-serif text-xl mb-2">Total Cash Required</h3>
+                      <div className="text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-white serif-font">
+                        {formatCurrency(result.totalCashRequired)}
+                      </div>
+                      <p className="text-slate-400 text-sm leading-relaxed mb-8 border-l border-gold-500 pl-4">
+                        Please ensure these funds are liquid and available in your account prior to the closing date.
+                      </p>
+                    </div>
+
+                    <div className="relative z-10 bg-slate-800 p-6 border border-slate-700">
+                       <div className="flex justify-between items-center mb-3 border-b border-slate-700 pb-2">
+                         <span className="text-slate-300 text-sm uppercase tracking-wide">Down Payment</span>
+                         <span className="font-semibold text-white">{formatCurrency(result.totalCashRequired - result.totalClosingCosts)}</span>
+                       </div>
+                       <div className="flex justify-between items-center pt-1">
+                         <span className="text-gold-400 text-sm uppercase tracking-wide">Closing Costs</span>
+                         <span className="font-semibold text-white">{formatCurrency(result.totalClosingCosts)}</span>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Breakdown */}
+                <div className="lg:col-span-7">
+                  <div className="bg-white p-8 shadow-xl border border-gray-100">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-3 serif-font">
+                      <div className="w-8 h-8 flex items-center justify-center bg-gold-500 text-white rounded-none">
+                        <Check className="w-5 h-5" />
+                      </div>
+                      Cost Breakdown
+                    </h3>
+                    
+                    <div className="flex flex-col">
+                      <Row label={`Land Transfer Tax (${province})`} value={result.landTransferTaxProvincial} />
+                      <Row label={`Land Transfer Tax (${city})`} value={result.landTransferTaxMunicipal} />
+                      <Row label="Non-Resident Speculation Tax" value={result.nonResidentSpeculationTax} subtext="Foreign Buyer Tax" />
+                      <Row label="LTT Rebate (Provincial)" value={result.rebateProvincial} isNegative subtext="First-Time Buyer Rebate" />
+                      <Row label="LTT Rebate (Municipal)" value={result.rebateMunicipal} isNegative subtext="First-Time Buyer Rebate" />
+                      
+                      <Row label="Legal Fees & Disbursements" value={result.legalFees} />
+                      <Row label="Title Insurance" value={result.titleInsurance} />
+                      <Row label="Government Registration Fees" value={result.registrationFees} />
+                      
+                      {result.pstOnMortgageInsurance > 0 && (
+                        <Row label="PST on CMHC Insurance" value={result.pstOnMortgageInsurance} subtext={`Tax on ${formatCurrency(result.mortgageInsurancePremium)} premium`} />
+                      )}
+                      
+                      <Row label="Appraisal Fee" value={result.appraisalFee} />
+                      <Row label="Home Inspection" value={result.homeInspectionFee} />
+                      <Row label="Estoppel Certificate" value={result.estoppelCertificateFee} subtext="Condo Status Certificate" />
+                      
+                      <Row label="Total Closing Costs" value={result.totalClosingCosts} isTotal />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex items-start gap-3 p-4 bg-gray-50 border-l-4 border-gold-400">
+                     <HelpCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-gold-600" />
+                     <p className="text-sm text-slate-600 leading-relaxed italic">
+                        <strong>Disclaimer:</strong> These figures are estimates. Legal fees, appraisals, and inspection costs may vary. Land Transfer Tax calculations are based on current rates for {province}.
+                     </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          );
+        };
+
+        const CalculatorForm = () => {
+          const [state, setState] = useState(INITIAL_STATE);
+          const [result, setResult] = useState(null);
+          const resultsRef = useRef(null);
+
+          useEffect(() => {
+            const newAmount = Math.round((state.purchasePrice * state.downPaymentPercent) / 100);
+            if (Math.abs(newAmount - state.downPaymentAmount) > 1) {
+               setState(prev => ({ ...prev, downPaymentAmount: newAmount }));
+            }
+          }, [state.purchasePrice, state.downPaymentPercent]);
+
+          const handlePriceChange = (e) => {
+            const rawVal = e.target.value.replace(/,/g, '');
+            if (rawVal === '') {
+              setState(prev => ({ ...prev, purchasePrice: 0 }));
+              return;
+            }
+            const val = parseFloat(rawVal);
+            if (!isNaN(val)) {
+              setState(prev => ({ ...prev, purchasePrice: val }));
+            }
+          };
+
+          const handleDownPaymentPercentChange = (e) => {
+            const val = parseFloat(e.target.value) || 0;
+            setState(prev => ({ ...prev, downPaymentPercent: val }));
+          };
+
+          const handleDownPaymentAmountChange = (e) => {
+            const rawVal = e.target.value.replace(/,/g, '');
+            const val = parseFloat(rawVal) || 0;
+            
+            let newPercent = 0;
+            if (state.purchasePrice > 0) {
+              newPercent = (val / state.purchasePrice) * 100;
+            }
+            setState(prev => ({ 
+              ...prev, 
+              downPaymentAmount: val,
+              downPaymentPercent: parseFloat(newPercent.toFixed(2))
+            }));
+          };
+
+          const handleCalculate = () => {
+            if (state.purchasePrice === 0) {
+              alert("Please enter a purchase price.");
+              return;
+            }
+            const calculatedResult = calculateClosingCosts(state);
+            setResult(calculatedResult);
+            setTimeout(() => {
+              resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+          };
+
+          const handleLocationChange = (isToronto) => {
+            setState(prev => ({
+              ...prev,
+              province: 'Ontario',
+              city: isToronto ? 'Toronto' : 'Other'
+            }));
+          };
+
+          return (
+            <div className="max-w-5xl mx-auto">
+              <div className="bg-white shadow-xl border-t-4 border-gold-500">
+                
+                <div className="bg-gray-50 border-b border-gray-200 px-8 py-6">
+                   <h2 className="text-xl font-serif text-slate-900">Enter your details</h2>
+                </div>
+
+                <div className="p-6 md:p-12">
+                  
+                  <div className="mb-12">
+                    <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3 serif-font">
+                      <span className="flex items-center justify-center w-8 h-8 bg-slate-900 text-gold-400 text-sm font-serif">1</span>
+                      Mortgage Details
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <Label hasHelp>Purchase Price</Label>
+                        <Input 
+                          prefix="$" 
+                          type="text" 
+                          inputMode="numeric"
+                          value={state.purchasePrice ? state.purchasePrice.toLocaleString() : ''} 
+                          onChange={handlePriceChange}
+                          placeholder="0"
+                          className="text-xl"
+                        />
+                      </div>
+                      <div className="space-y-4">
+                        <Label hasHelp>Down Payment</Label>
+                        <div className="flex items-center gap-3">
+                          <div className="w-28 flex-shrink-0">
+                             <Input 
+                               suffix="%" 
+                               type="number" 
+                               value={state.downPaymentPercent || ''}
+                               onChange={handleDownPaymentPercentChange}
+                               className="text-center"
+                             />
+                          </div>
+                          <span className="text-slate-400 font-serif text-lg italic">of price</span>
+                          <div className="flex-grow">
+                             <Input 
+                               prefix="$" 
+                               type="text"
+                               inputMode="numeric"
+                               value={state.downPaymentAmount ? state.downPaymentAmount.toLocaleString() : ''}
+                               onChange={handleDownPaymentAmountChange}
+                               className="text-xl"
+                             />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-100 mb-12" />
+
+                  <div className="mb-12">
+                     <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3 serif-font">
+                      <span className="flex items-center justify-center w-8 h-8 bg-slate-900 text-gold-400 text-sm font-serif">2</span>
+                      Location
+                    </h2>
+                    <Label className="mb-4 block">Where is the property located?</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <button
+                        type="button"
+                        onClick={() => handleLocationChange(true)}
+                        className={`
+                          group relative p-6 border transition-all duration-300 text-left
+                          ${state.city === 'Toronto'
+                            ? 'bg-slate-900 border-gold-500 shadow-xl' 
+                            : 'bg-white border-gray-200 hover:border-gold-400'
+                          }
+                        `}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <MapPin className={`w-8 h-8 ${state.city === 'Toronto' ? 'text-gold-500' : 'text-slate-300 group-hover:text-gold-500'}`} />
+                          {state.city === 'Toronto' && <CheckCircle2 className="w-6 h-6 text-gold-500" />}
+                        </div>
+                        <div className={`text-xl font-serif font-bold mb-1 ${state.city === 'Toronto' ? 'text-white' : 'text-slate-900'}`}>Toronto</div>
+                        <div className={`text-sm ${state.city === 'Toronto' ? 'text-slate-400' : 'text-slate-500'}`}>Includes Municipal Land Transfer Tax</div>
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => handleLocationChange(false)}
+                        className={`
+                          group relative p-6 border transition-all duration-300 text-left
+                          ${state.city !== 'Toronto'
+                            ? 'bg-slate-900 border-gold-500 shadow-xl' 
+                            : 'bg-white border-gray-200 hover:border-gold-400'
+                          }
+                        `}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <MapPin className={`w-8 h-8 ${state.city !== 'Toronto' ? 'text-gold-500' : 'text-slate-300 group-hover:text-gold-500'}`} />
+                          {state.city !== 'Toronto' && <CheckCircle2 className="w-6 h-6 text-gold-500" />}
+                        </div>
+                         <div className={`text-xl font-serif font-bold mb-1 ${state.city !== 'Toronto' ? 'text-white' : 'text-slate-900'}`}>Out of Toronto</div>
+                        <div className={`text-sm ${state.city !== 'Toronto' ? 'text-slate-400' : 'text-slate-500'}`}>Ontario Provincial Land Transfer Tax only</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-100 mb-12" />
+
+                  <div className="mb-12">
+                    <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3 serif-font">
+                      <span className="flex items-center justify-center w-8 h-8 bg-slate-900 text-gold-400 text-sm font-serif">3</span>
+                      Property Details
+                    </h2>
+                    <Label className="mb-4 block">What type of property are you purchasing?</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {PROPERTY_TYPE_CONFIG.map((config) => (
+                        <PropertyCard
+                          key={config.id}
+                          label={config.label}
+                          icon={config.icon}
+                          selected={state.propertyType === config.id}
+                          onClick={() => setState(prev => ({ ...prev, propertyType: config.id }))}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <hr className="border-gray-100 mb-12" />
+
+                  <div className="mb-12">
+                     <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-3 serif-font">
+                      <span className="flex items-center justify-center w-8 h-8 bg-slate-900 text-gold-400 text-sm font-serif">4</span>
+                      Buyer Profile
+                    </h2>
+                    <div className="space-y-6 bg-gray-50 p-6 border border-gray-200">
+                      <label className="flex items-center gap-4 cursor-pointer group">
+                        <div className="relative flex items-center">
+                          <input 
+                            type="checkbox" 
+                            className="peer sr-only"
+                            checked={state.isFirstTimeBuyer}
+                            onChange={(e) => setState(prev => ({ ...prev, isFirstTimeBuyer: e.target.checked }))}
+                          />
+                          <div className="w-6 h-6 border border-gray-400 bg-white peer-checked:bg-gold-500 peer-checked:border-gold-500 transition-all"></div>
+                          <CheckCircle2 className="w-4 h-4 text-white absolute top-1 left-1 opacity-0 peer-checked:opacity-100 transition-opacity" />
+                        </div>
+                        <span className="text-lg font-medium text-slate-800 group-hover:text-black">I am a first-time home buyer</span>
+                      </label>
+                      
+                      <div className="h-px bg-gray-200"></div>
+
+                      <label className="flex items-start gap-4 cursor-pointer group">
+                         <div className="relative flex items-center mt-1">
+                          <input 
+                            type="checkbox" 
+                            className="peer sr-only"
+                            checked={state.isResident}
+                            onChange={(e) => setState(prev => ({ ...prev, isResident: e.target.checked }))}
+                          />
+                          <div className="w-6 h-6 border border-gray-400 bg-white peer-checked:bg-gold-500 peer-checked:border-gold-500 transition-all"></div>
+                          <CheckCircle2 className="w-4 h-4 text-white absolute top-1 left-1 opacity-0 peer-checked:opacity-100 transition-opacity" />
+                        </div>
+                        <div>
+                          <span className="text-lg font-medium text-slate-800 group-hover:text-black block">I am a citizen or permanent resident of Canada</span>
+                          <p className="text-sm text-slate-500 mt-2 leading-relaxed italic">
+                            Foreign buyers will need to pay a Non-Resident Speculation Tax (NRST) of 25% in Ontario and 20% in certain regions of BC.
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center pt-8">
+                    <button 
+                      onClick={handleCalculate}
+                      className="
+                        group relative w-full sm:w-auto py-4 px-12
+                        bg-gold-500 text-white
+                        text-xl font-serif font-bold uppercase tracking-wider
+                        shadow-lg hover:bg-gold-600 hover:shadow-xl hover:-translate-y-0.5
+                        transition-all duration-300
+                      "
+                    >
+                      <span className="relative z-10 flex items-center gap-3">
+                        Calculate Closing Costs
+                        <ArrowRight className="w-6 h-6" />
+                      </span>
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+
+              <div ref={resultsRef}>
+                {result && (
+                  <ClosingCostsSummary 
+                    result={result} 
+                    city={state.city}
+                    province={state.province}
+                  />
+                )}
+              </div>
+
+            </div>
+          );
+        };
+
+        const App = () => {
+          return (
+            <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+              <header className="max-w-5xl mx-auto mb-10 text-center relative z-10">
+                <KoushaHeader />
+                <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3 serif-font">
+                  Buyer's Closing Costs Calculator
+                </h1>
+                <p className="text-lg text-slate-600 max-w-2xl mx-auto font-medium font-sans italic">
+                  Estimate your total cash required and avoid surprises on closing day.
+                </p>
+              </header>
+              
+              <main className="relative z-10">
+                <CalculatorForm />
+              </main>
+              
+              <footer className="mt-16 text-center text-slate-400 text-sm pb-8 font-serif">
+                <p>&copy; {new Date().getFullYear()} Kousha Law P.C. All rights reserved.</p>
+                <p className="mt-2 text-gold-600">Designed By Arash Ashouri +1(416)221-2120</p>
+              </footer>
+            </div>
+          );
+        };
+
+        const rootElement = document.getElementById('root');
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(<App />);
+    </script>
+</body>
+</html>
