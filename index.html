@@ -41,10 +41,10 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
     
-    <!-- React & Babel (Updated Versions) -->
+    <!-- React & Babel (Fixed for GitHub Pages) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <!-- Upgraded to @babel/standalone for better React 18 support -->
+    <!-- Important: Using @babel/standalone to compile JSX in browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
@@ -83,10 +83,10 @@
     <div id="root"></div>
     
     <!-- Error Fallback Display -->
-    <div id="error-message" style="display:none; padding: 20px; color: red; text-align: center; font-family: sans-serif;">
-        <h2>Something went wrong loading the calculator.</h2>
-        <p>Please check the console for details.</p>
-        <p id="error-text"></p>
+    <div id="error-message" style="display:none; padding: 20px; color: red; text-align: center; font-family: sans-serif; margin-top: 50px;">
+        <h2 style="font-size: 24px; margin-bottom: 10px;">Something went wrong loading the calculator.</h2>
+        <p>Please check the console for details or ensure your browser allows scripts.</p>
+        <p id="error-text" style="background: #eee; padding: 10px; border-radius: 4px; font-family: monospace;"></p>
     </div>
 
     <script>
@@ -96,6 +96,7 @@
       };
     </script>
 
+    <!-- Main Application Script -->
     <script type="text/babel" data-presets="env,react">
         const { useState, useEffect, useRef } = React;
 
@@ -542,7 +543,7 @@
           };
 
           return (
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-7xl mx-auto">
               <div className="bg-white shadow-xl border-t-4 border-gold-500">
                 
                 <div className="bg-gray-50 border-b border-gray-200 px-8 py-6">
@@ -750,7 +751,7 @@
         const App = () => {
           return (
             <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-              <header className="max-w-5xl mx-auto mb-10 text-center relative z-10">
+              <header className="max-w-7xl mx-auto mb-10 text-center relative z-10">
                 <KoushaHeader />
                 <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3 serif-font">
                   Buyer's Closing Costs Calculator
