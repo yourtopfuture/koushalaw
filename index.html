@@ -304,14 +304,66 @@
           </div>
         );
 
-        const Label = ({ children, hasHelp, htmlFor, className = '' }) => {
+        const Label = ({ children, hasHelp, helpText, htmlFor, className = '' }) => {
+          const [isOpen, setIsOpen] = useState(false);
+          const tooltipRef = useRef(null);
+
+          // Close tooltip when clicking outside (mobile support)
+          useEffect(() => {
+            function handleClickOutside(event) {
+              if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+                setIsOpen(false);
+              }
+            }
+            if (isOpen) {
+                document.addEventListener("mousedown", handleClickOutside);
+                document.addEventListener("touchstart", handleClickOutside);
+            }
+            return () => {
+                document.removeEventListener("mousedown", handleClickOutside);
+                document.removeEventListener("touchstart", handleClickOutside);
+            };
+          }, [isOpen]);
+
           return (
-            <label htmlFor={htmlFor} className={`flex items-center gap-1.5 text-slate-800 font-semibold mb-2 ${className}`}>
-              {children}
-              {hasHelp && (
-                <HelpCircle className="w-4 h-4 text-gold-500 hover:text-gold-600 cursor-pointer" />
+            <div className={`flex items-center gap-2 mb-2 ${className}`}>
+              <label htmlFor={htmlFor} className="text-slate-800 font-semibold cursor-pointer">
+                {children}
+              </label>
+              {hasHelp && helpText && (
+                <div 
+                  className="relative flex items-center" 
+                  ref={tooltipRef}
+                  onMouseEnter={() => setIsOpen(true)}
+                  onMouseLeave={() => setIsOpen(false)}
+                >
+                  <button 
+                     type="button" 
+                     onClick={(e) => { 
+                       e.preventDefault(); 
+                       // Toggle on click
+                       setIsOpen(!isOpen); 
+                     }}
+                     className="group flex items-center justify-center focus:outline-none"
+                     aria-label="More info"
+                  >
+                    <HelpCircle className="w-5 h-5 text-gold-400 group-hover:text-gold-600 transition-colors cursor-help" />
+                  </button>
+                  
+                  {/* Tooltip */}
+                  <div className={`
+                    absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 w-64 p-4
+                    bg-slate-900 text-white text-xs font-medium rounded-lg shadow-2xl text-center leading-relaxed z-[100]
+                    transition-all duration-200 ease-out origin-bottom
+                    ${isOpen ? 'opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible'}
+                  `}>
+                    {helpText}
+                    {/* Arrow */}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-6 border-r-6 border-t-6 border-l-transparent border-r-transparent border-t-slate-900"></div>
+                  </div>
+                </div>
               )}
-            </label>
+            </div>
           );
         };
 
@@ -534,7 +586,7 @@
             }, 100);
           };
 
-          const handleLocationChange = (isToronto) => {
+          const handleLocationChange = (isToronto: boolean) => {
             setState(prev => ({
               ...prev,
               province: 'Ontario',
@@ -559,7 +611,7 @@
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
-                        <Label hasHelp>Purchase Price</Label>
+                        <Label hasHelp helpText="The purchase price of your home.">Purchase Price</Label>
                         <Input 
                           prefix="$" 
                           type="text" 
@@ -571,7 +623,12 @@
                         />
                       </div>
                       <div className="space-y-4">
-                        <Label hasHelp>Down Payment</Label>
+                        <Label 
+                          hasHelp 
+                          helpText="The amount paid upfront. In Canada, the minimum down payment is 5%. Mortgage default insurance (commonly referred to as CMHC insurance) is required for down payments under 20%."
+                        >
+                          Down Payment
+                        </Label>
                         <div className="flex items-center gap-3">
                           <div className="w-28 flex-shrink-0">
                              <Input 
@@ -751,24 +808,31 @@
         const App = () => {
           return (
             <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-              <header className="max-w-7xl mx-auto mb-10 text-center relative z-10">
-                <KoushaHeader />
-                <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3 serif-font">
-                  Buyer's Closing Costs Calculator
-                </h1>
-                <p className="text-lg text-slate-600 max-w-2xl mx-auto font-medium font-sans italic">
-                  Estimate your total cash required and avoid surprises on closing day.
-                </p>
-              </header>
+               {/* Background Decorative Elements */}
+               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-96 bg-gradient-to-b from-slate-100 to-transparent -z-10 pointer-events-none" />
               
-              <main className="relative z-10">
-                <CalculatorForm />
-              </main>
-              
-              <footer className="mt-16 text-center text-slate-400 text-sm pb-8 font-serif">
-                <p>&copy; {new Date().getFullYear()} Kousha Law P.C. All rights reserved.</p>
-                <p className="mt-2 text-gold-600">Designed By Arash Ashouri +1(416)221-2120</p>
-              </footer>
+               <header className="max-w-5xl mx-auto mb-10 text-center relative z-10">
+                  <div className="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-lg shadow-gold-100 mb-6">
+                    <div className="bg-gold-500 p-2 rounded-xl text-white">
+                      <CalculatorIcon className="w-6 h-6" />
+                    </div>
+                  </div>
+                  <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3 serif-font">
+                    Buyer's Closing Costs Calculator
+                  </h1>
+                  <p className="text-lg text-slate-600 max-w-2xl mx-auto font-medium">
+                    Estimate your total cash required and avoid surprises on closing day.
+                  </p>
+                </header>
+
+                <main className="relative z-10">
+                  <CalculatorForm />
+                </main>
+                
+                <footer className="mt-16 text-center text-slate-400 text-sm pb-8">
+                  <p>&copy; {new Date().getFullYear()} Kousha Law P.C. . All rights reserved.</p>
+                  <p className="mt-2">Designed By Arash Ashouri +1(416)221-2120</p>
+                </footer>
             </div>
           );
         };
@@ -779,4 +843,3 @@
     </script>
 </body>
 </html>
-
